@@ -45,6 +45,20 @@ public class AuthController {
         return signedIn(HttpStatus.OK, auth.login(request));
     }
 
+    /** Signed-in user changes their own password. */
+    @PutMapping("/password")
+    public MessageResponse changePassword(Authentication authentication, @Valid @RequestBody ChangePasswordRequest request) {
+        auth.changePassword(authentication.getName(), request);
+        return new MessageResponse("Password changed", null);
+    }
+
+    /** Uses a reset link created by an admin. */
+    @PostMapping("/reset-password")
+    public MessageResponse resetPassword(@Valid @RequestBody ResetWithTokenRequest request) {
+        auth.resetWithToken(request);
+        return new MessageResponse("Password changed. You can sign in now.", null);
+    }
+
     public record ProfileRequest(String name) {}
 
     @PutMapping("/profile")

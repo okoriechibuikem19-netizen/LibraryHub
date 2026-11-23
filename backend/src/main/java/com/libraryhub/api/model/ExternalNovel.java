@@ -2,7 +2,19 @@ package com.libraryhub.api.model;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import java.util.*;
+
+/** A free, public-domain book from Project Gutenberg (via the Gutendex API). */
 @Document("external_novels")
 public class ExternalNovel {
- @Id public String id;public String title;public String author;public String coverUrl;public String sourceUrl;public String textUrl;public String language;public List<String> genres=new ArrayList<>();public long downloads;
+ @Id public String id;
+ public String title;
+ public String author;
+ public String coverUrl;
+ public String sourceUrl;
+ public String textUrl;
+ public String language;
+ public List<String> genres = new ArrayList<>();
+ public long downloads;
+ /** Short description from Gutendex, when available. */
+ public String summary = "";
 }

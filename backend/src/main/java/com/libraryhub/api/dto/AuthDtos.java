@@ -15,5 +15,8 @@ public final class AuthDtos {
                                        @NotBlank @Size(min=8,max=72) String newPassword){}
     public record MessageResponse(String message,String developmentOtp){}
     public record UserResponse(String id,String name,String email,UserRole role,UserStatus status,boolean emailVerified,boolean voiceEnabled){}
+    public record ChangePasswordRequest(@NotBlank String currentPassword,@NotBlank @Size(min=8,max=72) String newPassword){}
+    public record ResetWithTokenRequest(@NotBlank String token,@NotBlank @Size(min=8,max=72) String newPassword){}
+    public record ResetLinkResponse(String token,java.time.Instant expiresAt){}
     public record StaffRequest(@NotBlank @Size(max=120) String name,@NotBlank @Email String email,@NotBlank @Size(min=8,max=72) String password,@NotNull UserRole role){}
 }

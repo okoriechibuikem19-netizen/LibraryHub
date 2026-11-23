@@ -18,6 +18,8 @@ public class AdminController {
         var user=users.findById(id).orElseThrow();user.setStatus(com.libraryhub.api.model.UserStatus.valueOf(input.get("status")));
         return auth.response(users.save(user));
     }
+    /** Creates a one-time link (valid 24 hours) the admin can send to someone who forgot their password. */
+    @PostMapping("/{id}/reset-link") public ResetLinkResponse resetLink(@PathVariable String id){return auth.createResetLink(id);}
     /** For members who forgot their password: the admin sets a new one and tells them. */
     @PutMapping("/{id}/password") public UserResponse resetPassword(@PathVariable String id,@RequestBody java.util.Map<String,String> input){
         return auth.adminResetPassword(id,input.get("password"));
