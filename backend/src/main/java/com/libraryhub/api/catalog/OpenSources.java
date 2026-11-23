@@ -106,6 +106,34 @@ public class OpenSources {
 
     // ---------------- Open Library ----------------
 
+    /**
+     * Gives the built-in classics an Open Library cover and a backup text from archive.org,
+     * because gutenberg.org images and files are blocked on some networks.
+     */
+    public void enrichClassics(List<ExternalNovel> books) {
+        for (ExternalNovel v : books) {
+            try {
+                String body = openLibrary.get().uri(b -> b.path("/search.json")
+                        .queryParam("title", v.title).queryParam("author", v.author)
+                        .queryParam("fields", "cover_i,ia,ebook_access").queryParam("limit", 5).build())
+                        .retrieve().body(String.class);
+                boolean coverSet = false, textSet = false;
+                for (JsonNode d : json.readTree(body).path("docs")) {
+                    long cover = d.path("cover_i").asLong(0);
+                    if (!coverSet && cover > 0) { v.coverUrl = "https://covers.openlibrary.org/b/id/" + cover + "-M.jpg"; coverSet = true; }
+                    String ia = d.path("ia").path(0).asText("");
+                    if (!textSet && "public".equals(d.path("ebook_access").asText("")) && ia.matches("[A-Za-z0-9._-]{1,100}")) {
+                        v.backupTextUrl = "https://archive.org/download/" + ia + "/" + ia + "_djvu.txt"; textSet = true;
+                    }
+                    if (coverSet && textSet) break;
+                }
+            } catch (Exception e) {
+                log.debug("No Open Library match for {}: {}", v.title, e.getMessage());
+            }
+        }
+        log.info("Built-in classics: covers and backup texts loaded from Open Library");
+    }
+
     /** Books that can be read or borrowed free, with a cover. */
     public List<ExternalNovel> openLibrary(String term, String subject, int page) {
         if (term.isEmpty() && subject.isEmpty()) return List.of();

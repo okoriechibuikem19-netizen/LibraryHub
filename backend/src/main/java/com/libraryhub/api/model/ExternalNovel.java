@@ -23,4 +23,6 @@ public class ExternalNovel {
  public String readUrl;
  /** Free PDF download, when the source offers one (OpenStax). */
  public String pdfUrl;
+ /** A second copy of the text (archive.org), used if the main one can't be reached. */
+ public String backupTextUrl;
 }

@@ -54,6 +54,9 @@ public class CatalogController {
 
     public CatalogController(ExternalNovelRepository novels) {
         this.novels = novels;
+        Thread t = new Thread(() -> sources.enrichClassics(StarterCatalog.all()), "classics-covers");
+        t.setDaemon(true);
+        t.start();
     }
 
     /**
@@ -136,10 +139,10 @@ public class CatalogController {
     /** One book's details. Works even if nobody has searched for it before. */
     @GetMapping("/novels/{id}")
     public ExternalNovel one(@PathVariable String id) {
-        Optional<ExternalNovel> saved = novels.findById(id);
-        if (saved.isPresent()) return saved.get();
         ExternalNovel starter = StarterCatalog.find(id);
         if (starter != null) return starter;
+        Optional<ExternalNovel> saved = novels.findById(id);
+        if (saved.isPresent()) return saved.get();
         if (id.startsWith("openstax-")) {
             ExternalNovel book = sources.openStaxById(id);
             if (book != null) return book;
@@ -169,7 +172,14 @@ public class CatalogController {
         if (novel.textUrl == null || !(novel.textUrl.startsWith("https://www.gutenberg.org/")
                 || novel.textUrl.startsWith("https://archive.org/download/")))
             throw new IllegalArgumentException("This book is read on " + novel.source + "'s own website");
-        String content = web.get().uri(novel.textUrl).retrieve().body(String.class);
+        String content;
+        try {
+            content = web.get().uri(novel.textUrl).retrieve().body(String.class);
+        } catch (Exception e) {
+            if (novel.backupTextUrl == null) throw e;
+            log.warn("Main text failed for {} ({}), using the archive.org copy", id, e.getMessage());
+            content = web.get().uri(novel.backupTextUrl).retrieve().body(String.class);
+        }
         if (content == null) throw new IllegalArgumentException("Text not available");
         return content.length() > 1_500_000 ? content.substring(0, 1_500_000) : content;
     }
