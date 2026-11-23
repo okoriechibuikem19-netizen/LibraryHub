@@ -199,7 +199,12 @@ public class CatalogController {
         try {
             content = web.get().uri(novel.textUrl).retrieve().body(String.class);
         } catch (Exception e) {
-            if (novel.backupTextUrl == null) throw e;
+            if (novel.backupTextUrl == null) {
+                // gutenberg.org can't be reached: look for the same book's scan on Open Library / archive.org.
+                sources.enrichClassics(List.of(novel));
+                if (novel.backupTextUrl == null) throw new IllegalArgumentException("This book can't be opened right now. Please try another one.");
+                try { novels.save(novel); } catch (Exception ignored) { }
+            }
             log.warn("Main text failed for {} ({}), using the archive.org copy", id, e.getMessage());
             content = web.get().uri(novel.backupTextUrl).retrieve().body(String.class);
         }
