@@ -1,0 +1,10 @@
+services:
+  mongodb:
+    image: mongo:8
+    container_name: libraryhub-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - libraryhub_data:/data/db
+volumes:
+  libraryhub_data:
