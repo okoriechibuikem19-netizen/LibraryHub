@@ -2,13 +2,18 @@ package com.libraryhub.api.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.libraryhub.api.catalog.StarterCatalog;
 import com.libraryhub.api.exception.ResourceNotFoundException;
 import com.libraryhub.api.model.ExternalNovel;
 import com.libraryhub.api.repository.ExternalNovelRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
+
+import java.net.http.HttpClient;
+import java.time.Duration;
 
 import java.util.*;
 
@@ -23,7 +28,23 @@ public class CatalogController {
     private static final String ID_PREFIX = "gutenberg-";
 
     private final ExternalNovelRepository novels;
-    private final RestClient gutendex = RestClient.create("https://gutendex.com");
+    // Follows redirects (Gutendex sends /books -> /books/, Gutenberg moves text files) and
+    // gives up quickly, so a slow service falls back to the built-in shelf instead of hanging.
+    private static final RestClient.Builder HTTP = RestClient.builder()
+            .defaultHeader("User-Agent", "LibraryHub/1.0")
+            .requestFactory(factory());
+    private final RestClient gutendex = HTTP.clone().baseUrl("https://gutendex.com").build();
+    private final RestClient web = HTTP.clone().build();
+
+    private static JdkClientHttpRequestFactory factory() {
+        HttpClient client = HttpClient.newBuilder()
+                .followRedirects(HttpClient.Redirect.NORMAL)
+                .connectTimeout(Duration.ofSeconds(8))
+                .build();
+        JdkClientHttpRequestFactory f = new JdkClientHttpRequestFactory(client);
+        f.setReadTimeout(Duration.ofSeconds(20));
+        return f;
+    }
     // Read Gutendex replies as text and parse them ourselves (Jackson 2), so it doesn't depend on
     // which JSON library Spring picks for HTTP clients.
     private final ObjectMapper json = new ObjectMapper();
@@ -48,7 +69,7 @@ public class CatalogController {
         if (term.length() > 100 || subject.length() > 60) throw new IllegalArgumentException("Search is too long");
         try {
             String body = gutendex.get().uri(b -> {
-                b.path("/books").queryParam("page", page).queryParam("languages", "en");
+                b.path("/books/").queryParam("page", page).queryParam("languages", "en");
                 if (!term.isEmpty()) b.queryParam("search", term);
                 if (!subject.isEmpty()) b.queryParam("topic", subject);
                 return b.build();
@@ -60,14 +81,31 @@ public class CatalogController {
                 if (novel != null) found.add(novel);
             }
             if (!found.isEmpty()) novels.saveAll(found);
+            if (found.isEmpty() && page == 1) return fallback(term, subject);
             return found;
         } catch (Exception e) {
             // Gutendex is down or slow: fall back to the books we saved earlier.
-            log.warn("Gutendex search failed ({}), using saved books", e.getMessage());
-            if (term.isEmpty() && subject.isEmpty()) return novels.findAll().stream().limit(64).toList();
-            String like = term.isEmpty() ? subject : term;
-            return novels.findTop100ByTitleContainingIgnoreCaseOrAuthorContainingIgnoreCase(like, like);
+            log.warn("Gutendex search failed ({}: {}), using the built-in shelf", e.getClass().getSimpleName(), e.getMessage());
+            return page == 1 ? fallback(term, subject) : List.of();
         }
+    }
+
+    /** Built-in classics first, then any matching books saved from earlier searches. */
+    private List<ExternalNovel> fallback(String term, String subject) {
+        Map<String, ExternalNovel> out = new LinkedHashMap<>();
+        for (ExternalNovel v : StarterCatalog.search(term, subject)) out.put(v.id, v);
+        try {
+            List<ExternalNovel> saved;
+            if (term.isEmpty() && subject.isEmpty()) saved = novels.findAll().stream().limit(64).toList();
+            else {
+                String like = term.isEmpty() ? subject : term;
+                saved = novels.findTop100ByTitleContainingIgnoreCaseOrAuthorContainingIgnoreCase(like, like);
+            }
+            for (ExternalNovel v : saved) out.putIfAbsent(v.id, v);
+        } catch (Exception e) {
+            log.warn("Could not read saved books: {}", e.getMessage());
+        }
+        return new ArrayList<>(out.values());
     }
 
     /** One book's details. Works even if nobody has searched for it before. */
@@ -75,17 +113,21 @@ public class CatalogController {
     public ExternalNovel one(@PathVariable String id) {
         Optional<ExternalNovel> saved = novels.findById(id);
         if (saved.isPresent()) return saved.get();
+        ExternalNovel starter = StarterCatalog.find(id);
+        if (starter != null) return starter;
         String number = id.startsWith(ID_PREFIX) ? id.substring(ID_PREFIX.length()) : id;
         if (!number.matches("\\d{1,7}")) throw new ResourceNotFoundException("Book not found");
         try {
-            String body = gutendex.get().uri("/books/{n}", number).retrieve().body(String.class);
+            String body = gutendex.get().uri("/books/{n}/", number).retrieve().body(String.class);
             JsonNode n = body == null ? null : json.readTree(body);
             ExternalNovel novel = n == null ? null : toNovel(n);
             if (novel == null) throw new ResourceNotFoundException("Book not found");
             return novels.save(novel);
         } catch (ResourceNotFoundException e) {
+            if (starter != null) return starter;
             throw e;
         } catch (Exception e) {
+            if (starter != null) return starter;
             throw new ResourceNotFoundException("Book not found");
         }
     }
@@ -96,7 +138,7 @@ public class CatalogController {
         ExternalNovel novel = one(id);
         if (novel.textUrl == null || !novel.textUrl.startsWith("https://www.gutenberg.org/"))
             throw new IllegalArgumentException("Text not available for this title");
-        String content = RestClient.create().get().uri(novel.textUrl).retrieve().body(String.class);
+        String content = web.get().uri(novel.textUrl).retrieve().body(String.class);
         if (content == null) throw new IllegalArgumentException("Text not available");
         return content.length() > 1_500_000 ? content.substring(0, 1_500_000) : content;
     }
