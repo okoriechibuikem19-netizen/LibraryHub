@@ -87,9 +87,14 @@ public class EmailService {
             + "If you did not request this code, you can ignore this message. Never share it with anyone.\n\nLibraryHub");
     }
 
+    /** Reservation and loan reminders. Best effort: a mail problem never breaks the action itself. */
     public void sendNotice(String to, String subject, String body) {
         if (!enabled) return;
-        send(to, subject, body + "\n\nLibraryHub");
+        try {
+            send(to, subject, body + "\n\nLibraryHub");
+        } catch (RuntimeException ex) {
+            log.warn("Could not send notice to {}: {}", to, ex.getMessage());
+        }
     }
 
     private void send(String to, String subject, String body) {

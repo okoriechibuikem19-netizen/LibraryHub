@@ -18,7 +18,7 @@ public class SecurityConfig {
     @Bean SecurityFilterChain security(HttpSecurity http,JwtCookieFilter filter)throws Exception{
         return http.csrf(csrf->csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()).csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())).cors(cors->{}).sessionManagement(s->s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(a->a
-                .requestMatchers("/api/auth/csrf","/api/auth/register","/api/auth/login","/api/auth/verify-otp","/api/auth/resend-otp","/api/auth/forgot-password","/api/auth/reset-password","/actuator/health").permitAll()
+                .requestMatchers("/api/auth/csrf","/api/auth/register","/api/auth/login","/actuator/health").permitAll()
                 .requestMatchers(HttpMethod.GET,"/api/books/**").authenticated()
                 .requestMatchers("/api/catalog/**","/api/reader/**").authenticated()
                 .requestMatchers(HttpMethod.POST,"/api/books/**").hasAnyRole("ADMIN","LIBRARIAN")
