@@ -3,7 +3,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import java.util.*;
 
-/** A free, public-domain book from Project Gutenberg (via the Gutendex API). */
+/** A free book from Project Gutenberg, Open Library or OpenStax. */
 @Document("external_novels")
 public class ExternalNovel {
  @Id public String id;
@@ -17,4 +17,10 @@ public class ExternalNovel {
  public long downloads;
  /** Short description from Gutendex, when available. */
  public String summary = "";
+ /** "Project Gutenberg", "Open Library" or "OpenStax". */
+ public String source = "Project Gutenberg";
+ /** Where to read or borrow it on the source's own site (used when we can't show the text here). */
+ public String readUrl;
+ /** Free PDF download, when the source offers one (OpenStax). */
+ public String pdfUrl;
 }

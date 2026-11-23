@@ -2,6 +2,7 @@ package com.libraryhub.api.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.libraryhub.api.catalog.OpenSources;
 import com.libraryhub.api.catalog.StarterCatalog;
 import com.libraryhub.api.exception.ResourceNotFoundException;
 import com.libraryhub.api.model.ExternalNovel;
@@ -16,6 +17,7 @@ import java.net.http.HttpClient;
 import java.time.Duration;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Free public-domain books from Project Gutenberg, through the Gutendex API (https://gutendex.com).
@@ -35,6 +37,7 @@ public class CatalogController {
             .requestFactory(factory());
     private final RestClient gutendex = HTTP.clone().baseUrl("https://gutendex.com").build();
     private final RestClient web = HTTP.clone().build();
+    private final OpenSources sources = new OpenSources(HTTP);
 
     private static JdkClientHttpRequestFactory factory() {
         HttpClient client = HttpClient.newBuilder()
@@ -67,6 +70,28 @@ public class CatalogController {
         String subject = topic.trim();
         if (page < 1 || page > 1000) throw new IllegalArgumentException("Invalid page");
         if (term.length() > 100 || subject.length() > 60) throw new IllegalArgumentException("Search is too long");
+        // Ask the three sources at the same time.
+        CompletableFuture<List<ExternalNovel>> gutenberg = CompletableFuture.supplyAsync(() -> gutenberg(term, subject, page));
+        CompletableFuture<List<ExternalNovel>> library = CompletableFuture.supplyAsync(() -> sources.openLibrary(term, subject, page));
+        List<ExternalNovel> textbooks = page == 1 ? sources.openStax(term, subject) : List.of();
+
+        Map<String, ExternalNovel> out = new LinkedHashMap<>();
+        for (ExternalNovel v : textbooks) out.putIfAbsent(v.id, v);
+        for (ExternalNovel v : gutenberg.join()) out.putIfAbsent(v.id, v);
+        List<ExternalNovel> borrowed = library.join();
+        for (ExternalNovel v : borrowed) out.putIfAbsent(v.id, v);
+        try {
+            List<ExternalNovel> keep = new ArrayList<>(textbooks);
+            keep.addAll(borrowed);
+            if (!keep.isEmpty()) novels.saveAll(keep);   // so the book page can find them later
+        } catch (Exception e) {
+            log.warn("Could not save catalogue books: {}", e.getMessage());
+        }
+        return new ArrayList<>(out.values());
+    }
+
+    /** Project Gutenberg books through Gutendex, or the built-in shelf when it is unavailable. */
+    private List<ExternalNovel> gutenberg(String term, String subject, int page) {
         try {
             String body = gutendex.get().uri(b -> {
                 b.path("/books/").queryParam("page", page).queryParam("languages", "en");
@@ -115,6 +140,11 @@ public class CatalogController {
         if (saved.isPresent()) return saved.get();
         ExternalNovel starter = StarterCatalog.find(id);
         if (starter != null) return starter;
+        if (id.startsWith("openstax-")) {
+            ExternalNovel book = sources.openStaxById(id);
+            if (book != null) return book;
+            throw new ResourceNotFoundException("Book not found");
+        }
         String number = id.startsWith(ID_PREFIX) ? id.substring(ID_PREFIX.length()) : id;
         if (!number.matches("\\d{1,7}")) throw new ResourceNotFoundException("Book not found");
         try {
@@ -136,8 +166,9 @@ public class CatalogController {
     @GetMapping(value = "/novels/{id}/text", produces = "text/plain;charset=UTF-8")
     public String text(@PathVariable String id) {
         ExternalNovel novel = one(id);
-        if (novel.textUrl == null || !novel.textUrl.startsWith("https://www.gutenberg.org/"))
-            throw new IllegalArgumentException("Text not available for this title");
+        if (novel.textUrl == null || !(novel.textUrl.startsWith("https://www.gutenberg.org/")
+                || novel.textUrl.startsWith("https://archive.org/download/")))
+            throw new IllegalArgumentException("This book is read on " + novel.source + "'s own website");
         String content = web.get().uri(novel.textUrl).retrieve().body(String.class);
         if (content == null) throw new IllegalArgumentException("Text not available");
         return content.length() > 1_500_000 ? content.substring(0, 1_500_000) : content;
