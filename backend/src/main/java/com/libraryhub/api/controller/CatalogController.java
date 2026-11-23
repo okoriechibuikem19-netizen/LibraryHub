@@ -9,6 +9,8 @@ import com.libraryhub.api.model.ExternalNovel;
 import com.libraryhub.api.repository.ExternalNovelRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
@@ -106,7 +108,13 @@ public class CatalogController {
             List<ExternalNovel> found = new ArrayList<>();
             if (root != null) for (JsonNode n : root.path("results")) {
                 ExternalNovel novel = toNovel(n);
-                if (novel != null) found.add(novel);
+                if (novel == null) continue;
+                ExternalNovel classic = StarterCatalog.find(novel.id);
+                if (classic != null) {          // reuse the Open Library cover and backup text we found
+                    if (classic.coverUrl != null && classic.coverUrl.contains("openlibrary")) novel.coverUrl = classic.coverUrl;
+                    novel.backupTextUrl = classic.backupTextUrl;
+                }
+                found.add(novel);
             }
             if (!found.isEmpty()) novels.saveAll(found);
             if (found.isEmpty() && page == 1) return fallback(term, subject);
@@ -165,6 +173,21 @@ public class CatalogController {
         }
     }
 
+    /** A Project Gutenberg cover picture, fetched by the server and cached by the browser for a week. */
+    @GetMapping("/cover/{number}")
+    public ResponseEntity<byte[]> cover(@PathVariable String number) {
+        if (!number.matches("\\d{1,7}")) return ResponseEntity.notFound().build();
+        try {
+            byte[] image = web.get().uri("https://www.gutenberg.org/cache/epub/{n}/pg{n}.cover.medium.jpg", number, number)
+                    .retrieve().body(byte[].class);
+            if (image == null || image.length == 0) return ResponseEntity.notFound().build();
+            return ResponseEntity.ok().contentType(MediaType.IMAGE_JPEG)
+                    .header("Cache-Control", "public, max-age=604800").body(image);
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
     /** The full text of the book (signed-in users only). */
     @GetMapping(value = "/novels/{id}/text", produces = "text/plain;charset=UTF-8")
     public String text(@PathVariable String id) {
@@ -199,7 +222,8 @@ public class CatalogController {
         v.id = ID_PREFIX + n.path("id").asText();
         v.title = n.path("title").asText();
         v.author = cleanAuthor(n.path("authors").path(0).path("name").asText("Unknown"));
-        v.coverUrl = formats.path("image/jpeg").asText("");
+        // Served through our backend: some networks block gutenberg.org pictures in the browser.
+        v.coverUrl = formats.path("image/jpeg").asText("").isEmpty() ? "" : "/api/catalog/cover/" + n.path("id").asText();
         v.sourceUrl = "https://www.gutenberg.org/ebooks/" + n.path("id").asText();
         v.textUrl = text;
         v.language = n.path("languages").path(0).asText("en");
