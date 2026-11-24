@@ -1,0 +1,20 @@
+/* My Library, Account, and the password box. */
+
+.library-section { margin-bottom: 2.5rem; }
+.library-section h2 { font-size: 1.25rem; margin-bottom: 1rem; }
+.account-panel { padding: 1.25rem 1.4rem; }
+.account-panel h2 { margin-bottom: 1rem; }
+
+.password-box { position: relative; display: flex; align-items: center; }
+.password-box input { padding-right: 2.75rem; }
+.password-toggle {
+  position: absolute; right: 0.35rem; width: 34px; height: 34px; display: grid; place-items: center;
+  border: 0; border-radius: 8px; background: none; color: var(--muted); cursor: pointer;
+}
+.password-toggle:hover { color: var(--text); background: var(--surface-2); }
+
+.copy-box { display: flex; gap: 0.5rem; margin-top: 0.75rem; }
+.copy-box input { font-family: ui-monospace, Consolas, monospace; font-size: 0.85rem; }
+.badge-danger { background: var(--danger-soft); color: var(--danger); }
+.back-to-site { margin-top: 0.75rem; }
+.auth-hint a { font-weight: 600; }

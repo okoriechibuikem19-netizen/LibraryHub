@@ -18,6 +18,9 @@ public class SecurityConfig {
     @Bean SecurityFilterChain security(HttpSecurity http,JwtCookieFilter filter)throws Exception{
         return http.csrf(csrf->csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()).csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())).cors(cors->{}).sessionManagement(s->s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(a->a
+                // The website's own pages and files (everything outside /api) are public.
+                .requestMatchers(request -> !request.getRequestURI().startsWith("/api/")
+                        && !request.getRequestURI().startsWith("/actuator/")).permitAll()
                 .requestMatchers("/api/auth/csrf","/api/auth/register","/api/auth/login","/api/auth/reset-password","/actuator/health").permitAll()
                 .requestMatchers(HttpMethod.GET,"/api/catalog/novels/*/text").authenticated()
                 .requestMatchers(HttpMethod.GET,"/api/catalog/**").permitAll()

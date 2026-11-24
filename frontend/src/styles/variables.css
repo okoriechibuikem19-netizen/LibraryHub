@@ -1,0 +1,49 @@
+/* Colours and fonts. Change these to rebrand the whole app.
+   The second block is used automatically when the computer is in dark mode. */
+
+:root {
+  --bg: #f5f6f3;
+  --surface: #ffffff;
+  --surface-2: #eef0ec;
+  --border: #dfe3dc;
+  --text: #1c2420;
+  --muted: #5d6a63;
+  --primary: #1f5f4a;
+  --primary-hover: #184c3b;
+  --primary-soft: #e3efe9;
+  --danger: #b3261e;
+  --danger-soft: #fbe9e7;
+  --warning: #8a5a00;
+  --warning-soft: #fdf1d8;
+  --success: #1e6b3c;
+  --success-soft: #e2f3e8;
+  --info-soft: #e6eefb;
+  --radius: 10px;
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.05), 0 4px 16px rgb(0 0 0 / 0.04);
+  color-scheme: light;
+  font-family: Inter, "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+  color: var(--text);
+  background: var(--bg);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #121614;
+    --surface: #1a201d;
+    --surface-2: #222a26;
+    --border: #2e3833;
+    --text: #e7ece9;
+    --muted: #9aa8a0;
+    --primary: #5fb894;
+    --primary-hover: #74c8a5;
+    --primary-soft: #1f3a30;
+    --danger: #f2877e;
+    --danger-soft: #3b1f1c;
+    --warning: #e8b85c;
+    --warning-soft: #3a2f17;
+    --success: #7bd39b;
+    --success-soft: #1d3526;
+    --info-soft: #1e2a3d;
+    color-scheme: dark;
+  }
+}

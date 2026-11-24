@@ -1,0 +1,16 @@
+/* Inputs, labels, field errors, the OTP box. */
+
+.form { display: grid; gap: 1rem; }
+.form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; }
+.field { display: grid; gap: 0.3rem; }
+.field label { font-weight: 600; font-size: 0.9rem; }
+input, select {
+  width: 100%; padding: 0.6rem 0.75rem; font: inherit; color: var(--text);
+  background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+}
+input:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft); }
+input[aria-invalid="true"] { border-color: var(--danger); }
+.field-error { color: var(--danger); font-size: 0.85rem; }
+.field-hint { color: var(--muted); font-size: 0.85rem; }
+.form-row-end { display: flex; justify-content: flex-end; font-size: 0.9rem; margin-top: -0.5rem; }
+.otp-input { font-size: 1.5rem; letter-spacing: 0.5em; text-align: center; font-family: ui-monospace, Consolas, monospace; }

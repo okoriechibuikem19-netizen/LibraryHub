@@ -1,0 +1,10 @@
+/* Pop-up windows (add / edit book). */
+
+.modal-backdrop { position: fixed; inset: 0; background: rgb(0 0 0 / 0.45); display: grid; place-items: center; padding: 1rem; z-index: 50; }
+.modal {
+  background: var(--surface); border-radius: 14px; width: 100%; max-width: 480px;
+  max-height: calc(100vh - 2rem); overflow-y: auto; padding: 1.5rem; box-shadow: var(--shadow);
+}
+.modal-wide { max-width: 760px; }
+.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+.modal-actions { display: flex; justify-content: flex-end; gap: 0.5rem; }

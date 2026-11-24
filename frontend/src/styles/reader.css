@@ -1,0 +1,50 @@
+/* The reader: one chapter at a time, three themes. */
+
+.reader { --r-bg: #ffffff; --r-text: #1d1d1b; --r-muted: #6b6b66; --r-bar: rgb(255 255 255 / 0.92); --r-border: #e6e4de;
+  min-height: 100vh; background: var(--r-bg); color: var(--r-text); }
+.reader-sepia { --r-bg: #f4ecd8; --r-text: #4a3b28; --r-muted: #86735a; --r-bar: rgb(244 236 216 / 0.94); --r-border: #e0d3b6; }
+.reader-dark { --r-bg: #16181b; --r-text: #d8d6d0; --r-muted: #8c8a85; --r-bar: rgb(22 24 27 / 0.94); --r-border: #2b2e33; }
+.reader .icon-btn { color: var(--r-muted); }
+.reader .icon-btn:hover { background: color-mix(in srgb, var(--r-text) 8%, transparent); color: var(--r-text); }
+
+.reader-bar {
+  position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: 0.5rem;
+  padding: 0.5rem 0.75rem; background: var(--r-bar); backdrop-filter: blur(8px); border-bottom: 1px solid var(--r-border);
+}
+.reader-title { flex: 1; min-width: 0; display: grid; text-align: center; }
+.reader-title strong, .reader-title span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.reader-title span { color: var(--r-muted); font-size: 0.85rem; }
+.reader-progress { position: absolute; left: 0; right: 0; bottom: -1px; height: 3px; }
+.reader-progress span { display: block; height: 100%; background: var(--primary); transition: width 0.3s; }
+
+.reader-panel {
+  position: fixed; z-index: 25; top: 60px; right: 1rem; width: min(360px, calc(100vw - 2rem));
+  background: var(--r-bg); color: var(--r-text); border: 1px solid var(--r-border); border-radius: 14px;
+  box-shadow: 0 12px 40px rgb(0 0 0 / 0.25); padding: 1rem;
+}
+.reader-panel-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
+.reader-contents { max-height: calc(100vh - 90px); display: flex; flex-direction: column; }
+.reader-contents ol { list-style: none; margin: 0; padding: 0; overflow-y: auto; }
+.reader-contents button {
+  width: 100%; text-align: left; padding: 0.55rem 0.6rem; border: 0; border-radius: 8px;
+  background: none; color: var(--r-text); font: inherit; cursor: pointer;
+}
+.reader-contents button:hover { background: color-mix(in srgb, var(--r-text) 7%, transparent); }
+.reader-contents button.active { background: var(--primary); color: #fff; }
+.setting-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.5rem 0; }
+.segmented { display: inline-flex; align-items: center; border: 1px solid var(--r-border); border-radius: 9px; overflow: hidden; }
+.segmented button {
+  padding: 0.4rem 0.75rem; border: 0; background: none; color: var(--r-text); font: inherit; cursor: pointer; display: grid; place-items: center;
+}
+.segmented button.active { background: var(--primary); color: #fff; }
+.size-value { min-width: 2.2rem; text-align: center; font-variant-numeric: tabular-nums; }
+
+.reader-body { max-width: 720px; margin: 0 auto; padding: 2.5rem 1.4rem 4rem; scroll-margin-top: 80px; }
+.reader-text { line-height: 1.8; }
+.reader-text.font-serif { font-family: Georgia, "Times New Roman", serif; }
+.reader-text.font-sans { font-family: Inter, "Segoe UI", system-ui, sans-serif; }
+.reader-text h1 { font-size: 1.6em; margin-bottom: 1.5em; text-align: center; }
+.reader-text p { margin: 0 0 1.1em; text-align: justify; hyphens: auto; }
+.reader-nav { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid var(--r-border); }
+.reader .btn-ghost { color: var(--r-text); border-color: var(--r-border); }
+.reader-message { display: grid; gap: 1rem; justify-items: center; padding-top: 3rem; }

@@ -1,0 +1,17 @@
+/* A single book's page. */
+
+.book-detail { display: grid; grid-template-columns: 240px 1fr; gap: 2.25rem; align-items: start; }
+.book-detail-info { display: grid; gap: 0.8rem; }
+.book-detail-info h1 { font-size: clamp(1.6rem, 3vw, 2.3rem); }
+.book-detail-author { margin: 0; font-size: 1.1rem; color: var(--muted); }
+.book-detail-stats { margin: 0; display: flex; align-items: center; gap: 0.5rem; color: var(--muted); }
+.book-detail-summary { margin: 0; max-width: 70ch; line-height: 1.7; }
+.book-detail-actions { display: flex; gap: 0.6rem; flex-wrap: wrap; margin-top: 0.4rem; }
+.tag-list { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.tag { padding: 0.2rem 0.65rem; border-radius: 999px; background: var(--surface-2); color: var(--muted); font-size: 0.82rem; }
+.btn-lg { padding: 0.8rem 1.3rem; font-size: 1rem; }
+
+@media (max-width: 700px) {
+  .book-detail { grid-template-columns: 1fr; gap: 1.25rem; }
+  .book-detail-cover { width: 170px; margin: 0 auto; }
+}

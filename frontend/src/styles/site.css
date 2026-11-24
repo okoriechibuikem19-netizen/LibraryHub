@@ -1,0 +1,57 @@
+/* The public website: top bar, account menu, footer, and shared page widths. */
+
+.site { min-height: 100vh; display: flex; flex-direction: column; }
+.site-header {
+  position: sticky; top: 0; z-index: 30;
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  backdrop-filter: blur(10px); border-bottom: 1px solid var(--border);
+}
+.site-header-inner {
+  max-width: 1280px; margin: 0 auto; padding: 0.7rem 1.25rem;
+  display: flex; align-items: center; gap: 1.25rem;
+}
+.site-brand { text-decoration: none; font-size: 1.2rem; flex-shrink: 0; }
+.site-nav { display: flex; gap: 0.25rem; }
+.site-nav-link {
+  padding: 0.45rem 0.8rem; border-radius: 8px; color: var(--muted);
+  text-decoration: none; font-weight: 600; white-space: nowrap;
+}
+.site-nav-link:hover { color: var(--text); background: var(--surface-2); }
+.site-nav-link.active { color: var(--primary); background: var(--primary-soft); }
+.site-search { position: relative; flex: 1; max-width: 380px; margin-left: auto; display: flex; align-items: center; }
+.site-search svg { position: absolute; left: 0.75rem; color: var(--muted); pointer-events: none; }
+.site-search input { padding: 0.5rem 0.75rem 0.5rem 2.3rem; border-radius: 999px; background: var(--surface-2); border-color: transparent; }
+.site-auth { display: flex; gap: 0.5rem; flex-shrink: 0; }
+
+.account-menu { position: relative; flex-shrink: 0; }
+.account-button {
+  display: flex; align-items: center; gap: 0.5rem; padding: 0.3rem 0.6rem 0.3rem 0.3rem;
+  border: 1px solid var(--border); border-radius: 999px; background: var(--surface);
+  color: var(--text); font: inherit; font-weight: 600; cursor: pointer;
+}
+.account-dropdown {
+  position: absolute; right: 0; top: calc(100% + 0.5rem); min-width: 230px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+  box-shadow: var(--shadow); padding: 0.4rem; display: grid;
+}
+.account-dropdown a, .account-dropdown button {
+  display: flex; align-items: center; gap: 0.6rem; padding: 0.6rem 0.7rem; border-radius: 8px;
+  color: var(--text); text-decoration: none; background: none; border: 0; font: inherit; cursor: pointer; text-align: left;
+}
+.account-dropdown a:hover, .account-dropdown button:hover { background: var(--surface-2); }
+
+.site-main { flex: 1; }
+.site-footer { border-top: 1px solid var(--border); padding: 1.5rem 1.25rem; text-align: center; color: var(--muted); font-size: 0.9rem; }
+.site-footer p { margin: 0; }
+
+.page-container { max-width: 1280px; margin: 0 auto; padding: 1.75rem 1.25rem 3rem; }
+.page-container.narrow { max-width: 720px; }
+.small { font-size: 0.85rem; }
+
+@media (max-width: 860px) {
+  .site-header-inner { flex-wrap: wrap; gap: 0.6rem; }
+  .site-nav { order: 3; width: 100%; overflow-x: auto; }
+  .site-search { order: 4; max-width: none; width: 100%; margin-left: 0; }
+  .account-name { display: none; }
+  .site-auth, .account-menu { margin-left: auto; }
+}

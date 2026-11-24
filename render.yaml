@@ -1,0 +1,17 @@
+# Render Blueprint: one free web service that serves the website and the API at the same address.
+services:
+  - type: web
+    name: libraryhub
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: MONGODB_URI        # paste your Atlas connection string when Render asks
+        sync: false
+      - key: JWT_SECRET         # Render creates a long random secret
+        generateValue: true
+      - key: COOKIE_SECURE      # the site runs on https
+        value: "true"
+      - key: MAIL_ENABLED
+        value: "false"

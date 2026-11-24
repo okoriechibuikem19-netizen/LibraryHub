@@ -1,0 +1,19 @@
+/* Search toolbar, tables, the books list. */
+
+.toolbar { display: flex; gap: 0.75rem; margin-bottom: 1rem; flex-wrap: wrap; }
+.toolbar select { width: auto; min-width: 170px; }
+.search { position: relative; flex: 1; min-width: 220px; display: flex; align-items: center; }
+.search svg { position: absolute; left: 0.75rem; color: var(--muted); pointer-events: none; }
+.search input { padding-left: 2.4rem; }
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 0.93rem; }
+th { text-align: left; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); font-weight: 600; }
+th, td { padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
+tbody tr:last-child td { border-bottom: 0; }
+tbody tr:hover { background: var(--surface-2); }
+.book-cell { display: flex; align-items: center; gap: 0.75rem; min-width: 220px; }
+.book-cell > div { display: grid; }
+.book-cell .muted { font-size: 0.85rem; }
+.cover { width: 36px; height: 50px; object-fit: cover; border-radius: 4px; flex-shrink: 0; background: var(--surface-2); }
+.cover-placeholder { display: grid; place-items: center; font-weight: 700; color: var(--primary); background: var(--primary-soft); }
+.row-actions { display: flex; justify-content: flex-end; align-items: center; gap: 0.25rem; }
