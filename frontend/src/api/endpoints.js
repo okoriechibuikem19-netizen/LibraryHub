@@ -22,6 +22,8 @@ export const authApi = {
   register: (name, email, password) =>
     api("/api/auth/register", { method: "POST", body: { name, email, password } }),
   logout: () => api("/api/auth/logout", { method: "POST" }),
+  /** "Continue with Google": sends Google's token; returns the signed-in User. */
+  google: (credential) => api("/api/auth/google", { method: "POST", body: { credential } }),
   /** Uses a reset link an admin created. */
   resetPassword: (token, newPassword) =>
     api("/api/auth/reset-password", { method: "POST", body: { token, newPassword } }),

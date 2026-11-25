@@ -21,7 +21,7 @@ public class SecurityConfig {
                 // The website's own pages and files (everything outside /api) are public.
                 .requestMatchers(request -> !request.getRequestURI().startsWith("/api/")
                         && !request.getRequestURI().startsWith("/actuator/")).permitAll()
-                .requestMatchers("/api/auth/csrf","/api/auth/register","/api/auth/login","/api/auth/reset-password","/actuator/health").permitAll()
+                .requestMatchers("/api/auth/csrf","/api/auth/register","/api/auth/login","/api/auth/reset-password","/api/auth/google","/api/auth/config","/actuator/health").permitAll()
                 .requestMatchers(HttpMethod.GET,"/api/catalog/novels/*/text").authenticated()
                 .requestMatchers(HttpMethod.GET,"/api/catalog/**").permitAll()
                 .requestMatchers(HttpMethod.GET,"/api/books/**").authenticated()

@@ -58,6 +58,32 @@ public class AuthService {
         return user;
     }
 
+    /** Signs in (or creates) an account for an email address that Google has verified. */
+    public UserAccount googleSignIn(String email, String name) {
+        String address = normalize(email);
+        UserAccount user = users.findByEmailIgnoreCase(address).orElse(null);
+        if (user == null) {
+            user = new UserAccount();
+            user.setName(name == null || name.isBlank() ? address : name.trim());
+            user.setEmail(address);
+            // No password: random, unusable one. They can set a real one later via a reset link.
+            byte[] bytes = new byte[32];
+            random.nextBytes(bytes);
+            user.setPasswordHash(encoder.encode(java.util.Base64.getEncoder().encodeToString(bytes)));
+            user.setRole(UserRole.MEMBER);
+            user.setStatus(UserStatus.ACTIVE);
+            user.setCreatedAt(Instant.now());
+        }
+        if (user.getStatus() == UserStatus.SUSPENDED)
+            throw new IllegalArgumentException("This account is suspended. Please contact the library.");
+        user.setStatus(UserStatus.ACTIVE);
+        user.setEmailVerified(true);
+        user.setLastLoginAt(Instant.now());
+        users.save(user);
+        if (user.getRole() == UserRole.MEMBER) ensureMemberRecord(user);
+        return user;
+    }
+
     /** Checks email + password. The same message is used for "no account" and "wrong password". */
     public UserAccount login(LoginRequest request) {
         UserAccount user = users.findByEmailIgnoreCase(normalize(request.email()))

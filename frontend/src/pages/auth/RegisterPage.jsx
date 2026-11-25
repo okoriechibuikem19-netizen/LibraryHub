@@ -4,6 +4,7 @@ import { ApiError, errorMessage } from "../../api/client";
 import { authApi } from "../../api/endpoints";
 import { useAuth } from "../../auth/AuthContext";
 import { AuthCard } from "../../components/layout/AuthCard";
+import { GoogleButton } from "../../components/auth/GoogleButton";
 import { Alert, Field, PasswordField } from "../../components/ui";
 
 export function RegisterPage() {
@@ -63,6 +64,13 @@ export function RegisterPage() {
           {busy ? "Creating account…" : "Create account"}
         </button>
       </form>
+      <GoogleButton
+        text="signup_with"
+        onSignedIn={(user) => {
+          signIn(user);
+          navigate("/", { replace: true });
+        }}
+      />
     </AuthCard>
   );
 }

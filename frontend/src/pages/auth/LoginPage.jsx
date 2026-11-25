@@ -4,6 +4,7 @@ import { errorMessage } from "../../api/client";
 import { authApi } from "../../api/endpoints";
 import { STAFF_ROLES, useAuth } from "../../auth/AuthContext";
 import { AuthCard } from "../../components/layout/AuthCard";
+import { GoogleButton } from "../../components/auth/GoogleButton";
 import { Alert, Field, PasswordField } from "../../components/ui";
 
 export function LoginPage() {
@@ -17,6 +18,12 @@ export function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+
+  function goHome(user) {
+    signIn(user);
+    const home = STAFF_ROLES.includes(user.role) ? "/admin" : "/";
+    navigate(from && from !== "/login" ? from : home, { replace: true });
+  }
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -71,6 +78,7 @@ export function LoginPage() {
           <Link to="/reset-password">Forgot your password?</Link>
         </p>
       </form>
+      <GoogleButton onSignedIn={goHome} text="signin_with" />
     </AuthCard>
   );
 }

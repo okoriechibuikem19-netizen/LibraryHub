@@ -23,10 +23,12 @@ public class AuthController {
     private final JwtService jwt;
     private final boolean secure;
     private final LoginLimiter limiter;
+    private final GoogleTokenVerifier google;
 
-    public AuthController(AuthService auth, JwtService jwt, LoginLimiter limiter,
+    public AuthController(AuthService auth, JwtService jwt, LoginLimiter limiter, GoogleTokenVerifier google,
                           @Value("${app.auth.cookie-secure:false}") boolean secure) {
         this.auth = auth;
+        this.google = google;
         this.jwt = jwt;
         this.limiter = limiter;
         this.secure = secure;
@@ -58,6 +60,28 @@ public class AuthController {
         }
         limiter.loginSucceeded(request.email());
         return signedIn(HttpStatus.OK, user);
+    }
+
+    /** Public settings the website needs (the Google Client ID is public by design). */
+    @GetMapping("/config")
+    public Map<String, String> config() {
+        return Map.of("googleClientId", google.clientId());
+    }
+
+    public record GoogleRequest(String credential) {}
+
+    /** "Continue with Google": Google's token proves the email, then we sign them in (or create the account). */
+    @PostMapping("/google")
+    public ResponseEntity<UserResponse> google(@RequestBody GoogleRequest request, HttpServletRequest http) {
+        limiter.checkLogin("", http.getRemoteAddr());
+        GoogleTokenVerifier.GoogleUser person;
+        try {
+            person = google.verify(request.credential());
+        } catch (IllegalArgumentException e) {
+            limiter.loginFailed("", http.getRemoteAddr());
+            throw e;
+        }
+        return signedIn(HttpStatus.OK, auth.googleSignIn(person.email(), person.name()));
     }
 
     /** Signed-in user changes their own password. */
