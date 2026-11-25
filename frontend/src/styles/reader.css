@@ -48,3 +48,14 @@
 .reader-nav { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid var(--r-border); }
 .reader .btn-ghost { color: var(--r-text); border-color: var(--r-border); }
 .reader-message { display: grid; gap: 1rem; justify-items: center; padding-top: 3rem; }
+
+/* Phones */
+@media (max-width: 600px) {
+  .reader-body { padding: 1.5rem 1rem 3rem; }
+  .reader-text p { text-align: left; }
+  .reader-text h1 { font-size: 1.35em; margin-bottom: 1em; }
+  .reader-nav { gap: 0.5rem; }
+  .reader-nav .btn { padding: 0.5rem 0.8rem; font-size: 0.9rem; }
+  .reader-panel { top: 56px; right: 0.5rem; width: calc(100vw - 1rem); }
+  .setting-row { flex-wrap: wrap; gap: 0.5rem; }
+}

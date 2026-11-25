@@ -75,7 +75,7 @@ export function BrowsePage({ mode = "novels" }) {
         <h1>{heading}</h1>
         <p className="muted">
           {mode === "textbooks"
-            ? "Free public-domain textbooks and classic study books."
+            ? "Free university textbooks (OpenStax) and classic study books."
             : "Free classic novels. Sign in to read any of them online."}
         </p>
       </div>

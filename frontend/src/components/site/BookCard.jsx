@@ -16,7 +16,7 @@ export function BookCard({ book, progress }) {
       <strong className="book-card-title">{book.title}</strong>
       <span className="book-card-author">{book.author}</span>
       <span className="book-card-reads">
-        {book.downloads > 0 ? <><Eye size={13} aria-hidden="true" /> {compactNumber(book.downloads)} reads</> : book.source || "Free"}
+        {book.downloads > 0 ? <><Eye size={13} aria-hidden="true" /> {compactNumber(book.downloads)} reads</> : (book.source && book.source !== book.author ? book.source : "Free")}
       </span>
     </Link>
   );
@@ -28,7 +28,7 @@ export function BookCover({ book, large = false }) {
   const [failedUrl, setFailedUrl] = useState(null);
   if (book.coverUrl && failedUrl !== book.coverUrl) {
     return (
-      <img src={book.coverUrl} alt={`Cover of ${book.title}`} className={`cover-img${large ? " cover-large" : ""}`}
+      <img src={book.coverUrl} alt={`Cover of ${book.title}`} className={`cover-img${large ? " cover-large" : ""}${book.source === "OpenStax" ? " cover-contain" : ""}`}
         loading="lazy" onError={() => setFailedUrl(book.coverUrl)} />
     );
   }

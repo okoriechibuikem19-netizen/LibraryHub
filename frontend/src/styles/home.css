@@ -78,8 +78,12 @@
 
 @media (max-width: 640px) {
   .hero-inner { flex-direction: column; text-align: center; align-items: center; padding: 1.75rem 1.25rem; }
-  .hero-cover { width: 140px; }
+  .hero-cover { width: 110px; }
+  .hero-summary { -webkit-line-clamp: 2; font-size: 0.92rem; }
   .hero-tag, .hero-stats, .hero-actions { justify-content: center; margin-inline: auto; }
   .book-row-scroll { grid-auto-columns: 120px; }
   .book-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
 }
+
+/* Textbook covers (OpenStax) are not book-shaped: show all of it. */
+.cover-img.cover-contain { object-fit: contain; background: #fff; padding: 6px; }
