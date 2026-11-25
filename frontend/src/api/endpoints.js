@@ -29,6 +29,16 @@ export const authApi = {
     api("/api/auth/reset-password", { method: "POST", body: { token, newPassword } }),
 };
 
+export const reviewsApi = {
+  /** { average, count, stars: [1★..5★ counts], reviews: [{ id, name, rating, comment, createdAt, mine }] } */
+  list: (bookId, signal) => api(`/api/catalog/novels/${encodeURIComponent(bookId)}/reviews`, { signal }),
+  save: (bookId, rating, comment) =>
+    api(`/api/catalog/novels/${encodeURIComponent(bookId)}/reviews`, { method: "PUT", body: { rating, comment } }),
+  remove: (bookId) => api(`/api/catalog/novels/${encodeURIComponent(bookId)}/reviews`, { method: "DELETE" }),
+  report: (bookId, reviewId) =>
+    api(`/api/catalog/novels/${encodeURIComponent(bookId)}/reviews/${encodeURIComponent(reviewId)}/report`, { method: "POST" }),
+};
+
 export const accountApi = {
   changePassword: (currentPassword, newPassword) =>
     api("/api/auth/password", { method: "PUT", body: { currentPassword, newPassword } }),

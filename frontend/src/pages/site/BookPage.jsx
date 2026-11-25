@@ -6,6 +6,7 @@ import { catalogApi, readerApi } from "../../api/endpoints";
 import { useAuth } from "../../auth/AuthContext";
 import { BookCover } from "../../components/site/BookCard";
 import { BookRow } from "../../components/site/BookRow";
+import { ReviewsSection } from "../../components/site/ReviewsSection";
 import { Alert, Spinner } from "../../components/ui";
 import { compactNumber } from "../../utils/books";
 
@@ -115,6 +116,8 @@ export function BookPage() {
           </p>
         </div>
       </article>
+
+      <ReviewsSection bookId={book.id} />
 
       {book.genres?.[0] && <BookRow title="You may also like" topic={book.genres[0].toLowerCase()} excludeId={book.id} />}
     </div>

@@ -55,6 +55,6 @@ public class Phase2Service {
     }
     public List<LoanResponse> myLoans(String email){Member member=members.findByEmailIgnoreCase(email).orElseThrow(()->new ResourceNotFoundException("Member profile not found"));return loanService.getForMember(member.getId());}
     private ReservationResponse reservation(Reservation v){return new ReservationResponse(v.getId(),v.getBookId(),v.getUserEmail(),v.getStatus(),v.getCreatedAt(),v.getExpiresAt());}
-    private ReviewResponse review(Review v){return new ReviewResponse(v.getId(),v.getBookId(),v.getUserEmail(),v.getRating(),v.getComment(),v.getCreatedAt());}
+    private ReviewResponse review(Review v){return new ReviewResponse(v.getId(),v.getBookId(),null /* never share emails */,v.getRating(),v.getComment(),v.getCreatedAt());}
     private ProgressResponse progress(ReadingProgress v){return new ProgressResponse(v.getId(),v.getBookId(),v.getPercentage(),v.getCurrentPage(),v.getUpdatedAt());}
 }
