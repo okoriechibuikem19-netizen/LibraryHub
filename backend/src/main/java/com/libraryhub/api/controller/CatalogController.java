@@ -20,6 +20,8 @@ import java.time.Duration;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Free public-domain books from Project Gutenberg, through the Gutendex API (https://gutendex.com).
@@ -40,6 +42,11 @@ public class CatalogController {
     private final RestClient gutendex = HTTP.clone().baseUrl("https://gutendex.com").build();
     private final RestClient web = HTTP.clone().build();
     private final OpenSources sources = new OpenSources(HTTP);
+
+    /** Recent search results, so pages open instantly for the next visitor (kept 30 minutes). */
+    private record Cached(List<ExternalNovel> books, long at) {}
+    private final Map<String, Cached> cache = new ConcurrentHashMap<>();
+    private static final long CACHE_MS = 30 * 60 * 1000L;
 
     private static JdkClientHttpRequestFactory factory() {
         HttpClient client = HttpClient.newBuilder()
@@ -75,9 +82,16 @@ public class CatalogController {
         String subject = topic.trim();
         if (page < 1 || page > 1000) throw new IllegalArgumentException("Invalid page");
         if (term.length() > 100 || subject.length() > 60) throw new IllegalArgumentException("Search is too long");
-        // Ask the three sources at the same time.
-        CompletableFuture<List<ExternalNovel>> gutenberg = CompletableFuture.supplyAsync(() -> gutenberg(term, subject, page));
-        CompletableFuture<List<ExternalNovel>> library = CompletableFuture.supplyAsync(() -> sources.openLibrary(term, subject, page));
+        String key = term.toLowerCase(Locale.ROOT) + "|" + subject.toLowerCase(Locale.ROOT) + "|" + page;
+        Cached hit = cache.get(key);
+        if (hit != null && System.currentTimeMillis() - hit.at() < CACHE_MS) return hit.books();
+        if (cache.size() > 500) cache.clear();
+
+        // Ask the three sources at the same time, but never wait more than 8 seconds for a slow one.
+        CompletableFuture<List<ExternalNovel>> gutenberg = CompletableFuture.supplyAsync(() -> gutenberg(term, subject, page))
+                .completeOnTimeout(page == 1 ? fallback(term, subject) : List.of(), 8, TimeUnit.SECONDS);
+        CompletableFuture<List<ExternalNovel>> library = CompletableFuture.supplyAsync(() -> sources.openLibrary(term, subject, page))
+                .completeOnTimeout(List.of(), 8, TimeUnit.SECONDS);
         List<ExternalNovel> textbooks = page == 1 ? sources.openStax(term, subject) : List.of();
 
         Map<String, ExternalNovel> out = new LinkedHashMap<>();
@@ -92,7 +106,9 @@ public class CatalogController {
         } catch (Exception e) {
             log.warn("Could not save catalogue books: {}", e.getMessage());
         }
-        return new ArrayList<>(out.values());
+        List<ExternalNovel> result = new ArrayList<>(out.values());
+        if (!result.isEmpty()) cache.put(key, new Cached(result, System.currentTimeMillis()));
+        return result;
     }
 
     /** Project Gutenberg books through Gutendex, or the built-in shelf when it is unavailable. */
@@ -227,8 +243,8 @@ public class CatalogController {
         v.id = ID_PREFIX + n.path("id").asText();
         v.title = n.path("title").asText();
         v.author = cleanAuthor(n.path("authors").path(0).path("name").asText("Unknown"));
-        // Served through our backend: some networks block gutenberg.org pictures in the browser.
-        v.coverUrl = formats.path("image/jpeg").asText("").isEmpty() ? "" : "/api/catalog/cover/" + n.path("id").asText();
+        // If a network blocks gutenberg.org pictures, the website shows a coloured cover instead.
+        v.coverUrl = formats.path("image/jpeg").asText("");
         v.sourceUrl = "https://www.gutenberg.org/ebooks/" + n.path("id").asText();
         v.textUrl = text;
         v.language = n.path("languages").path(0).asText("en");
