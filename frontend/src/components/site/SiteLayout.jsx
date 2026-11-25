@@ -93,6 +93,9 @@ export function SiteLayout() {
           <strong>LibraryHub</strong>: free novels and textbooks. Online books come from{" "}
           <a href="https://www.gutenberg.org" target="_blank" rel="noreferrer">Project Gutenberg</a> and are in the public domain.
         </p>
+        <p className="footer-links">
+          <Link to="/privacy">Privacy Policy</Link> · <Link to="/terms">Terms of Service</Link>
+        </p>
       </footer>
     </div>
   );

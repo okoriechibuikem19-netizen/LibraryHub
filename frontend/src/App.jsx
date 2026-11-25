@@ -16,6 +16,7 @@ import { ReaderPage } from "./pages/reader/ReaderPage";
 import { BookPage } from "./pages/site/BookPage";
 import { BrowsePage } from "./pages/site/BrowsePage";
 import { HomePage } from "./pages/site/HomePage";
+import { PrivacyPage, TermsPage } from "./pages/site/LegalPages";
 
 // All the pages and their addresses.
 export function App() {
@@ -29,6 +30,8 @@ export function App() {
             <Route path="/browse" element={<BrowsePage mode="novels" />} />
             <Route path="/textbooks" element={<BrowsePage mode="textbooks" />} />
             <Route path="/book/:id" element={<BookPage />} />
+            <Route path="/privacy" element={<PrivacyPage />} />
+            <Route path="/terms" element={<TermsPage />} />
             <Route path="/library" element={<RequireAuth><LibraryPage /></RequireAuth>} />
             <Route path="/account" element={<RequireAuth><AccountPage /></RequireAuth>} />
           </Route>
