@@ -4,6 +4,7 @@ import com.libraryhub.api.dto.AuthDtos.*;
 import com.libraryhub.api.model.UserAccount;
 import com.libraryhub.api.security.*;
 import com.libraryhub.api.service.AuthService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
@@ -21,10 +22,13 @@ public class AuthController {
     private final AuthService auth;
     private final JwtService jwt;
     private final boolean secure;
+    private final LoginLimiter limiter;
 
-    public AuthController(AuthService auth, JwtService jwt, @Value("${app.auth.cookie-secure:false}") boolean secure) {
+    public AuthController(AuthService auth, JwtService jwt, LoginLimiter limiter,
+                          @Value("${app.auth.cookie-secure:false}") boolean secure) {
         this.auth = auth;
         this.jwt = jwt;
+        this.limiter = limiter;
         this.secure = secure;
     }
 
@@ -35,14 +39,25 @@ public class AuthController {
 
     /** Creates a member account and signs it in straight away. */
     @PostMapping("/register")
-    public ResponseEntity<UserResponse> register(@Valid @RequestBody RegisterRequest request) {
+    public ResponseEntity<UserResponse> register(@Valid @RequestBody RegisterRequest request, HttpServletRequest http) {
+        limiter.checkSignup(http.getRemoteAddr());
         return signedIn(HttpStatus.CREATED, auth.register(request));
     }
 
     /** Email + password. Sets the login cookie when they are correct. */
     @PostMapping("/login")
-    public ResponseEntity<UserResponse> login(@Valid @RequestBody LoginRequest request) {
-        return signedIn(HttpStatus.OK, auth.login(request));
+    public ResponseEntity<UserResponse> login(@Valid @RequestBody LoginRequest request, HttpServletRequest http) {
+        String address = http.getRemoteAddr();
+        limiter.checkLogin(request.email(), address);
+        UserAccount user;
+        try {
+            user = auth.login(request);
+        } catch (IllegalArgumentException wrong) {
+            limiter.loginFailed(request.email(), address);
+            throw wrong;
+        }
+        limiter.loginSucceeded(request.email());
+        return signedIn(HttpStatus.OK, user);
     }
 
     /** Signed-in user changes their own password. */

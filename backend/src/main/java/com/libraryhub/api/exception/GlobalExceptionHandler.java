@@ -33,6 +33,10 @@ public class GlobalExceptionHandler {
     ResponseEntity<ApiError> configuration(IllegalStateException ex,HttpServletRequest request){
         return error(HttpStatus.SERVICE_UNAVAILABLE,ex.getMessage(),request,Map.of());
     }
+    @ExceptionHandler(com.libraryhub.api.security.LoginLimiter.TooManyAttemptsException.class)
+    ResponseEntity<ApiError> tooMany(RuntimeException ex,HttpServletRequest request) {
+        return error(HttpStatus.TOO_MANY_REQUESTS,ex.getMessage(),request,Map.of());
+    }
     @ExceptionHandler(IllegalArgumentException.class)
     ResponseEntity<ApiError> badRequest(IllegalArgumentException ex,HttpServletRequest request) {
         return error(HttpStatus.BAD_REQUEST,ex.getMessage(),request,Map.of());
