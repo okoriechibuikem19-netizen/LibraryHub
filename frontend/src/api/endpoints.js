@@ -91,6 +91,8 @@ export const adminApi = {
     api("/api/admin/users", { method: "POST", body: { name, email, password, role } }),
   /** Returns { token, expiresAt }. The page turns it into a link. */
   resetLink: (id) => api(`/api/admin/users/${encodeURIComponent(id)}/reset-link`, { method: "POST" }),
+  /** Website numbers: users, sign-ups (last 14 days), reading, reviews, most-read and top-rated books. */
+  stats: () => api("/api/admin/stats"),
 };
 
 // The signed-in user's physical library loans and reservations.

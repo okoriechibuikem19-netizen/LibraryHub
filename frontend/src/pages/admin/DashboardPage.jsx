@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { errorMessage } from "../../api/client";
-import { booksApi, loansApi, membersApi, myLibraryApi } from "../../api/endpoints";
+import { adminApi, booksApi, loansApi, membersApi, myLibraryApi } from "../../api/endpoints";
 import { STAFF_ROLES, useAuth } from "../../auth/AuthContext";
 import { Alert, EmptyState, Spinner } from "../../components/ui";
 import { formatDate, formatMoney, isOverdue } from "../../utils/format";
@@ -17,6 +17,7 @@ export function DashboardPage() {
           <p className="muted">{new Date().toLocaleDateString(undefined, { dateStyle: "full" })}</p>
         </div>
       </div>
+      {hasRole("ADMIN") && <WebsiteStats />}
       {hasRole(...STAFF_ROLES) ? <StaffDashboard /> : <MemberDashboard />}
     </>
   );
@@ -185,6 +186,78 @@ function MemberDashboard() {
 }
 
 /** One number card. tone: "danger" (red) | "warning" (amber) | nothing. */
+/** Admin only: how the public website is doing. */
+function WebsiteStats() {
+  const [stats, setStats] = useState(null);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    adminApi.stats().then(setStats).catch((err) => setError(errorMessage(err)));
+  }, []);
+
+  if (error) return <Alert>{error}</Alert>;
+  if (!stats) return <Spinner label="Loading website numbers…" />;
+  const peak = Math.max(1, ...stats.signups.map((d) => d.count));
+
+  return (
+    <>
+      <h2 className="dash-section-title">Website</h2>
+      <section className="stats">
+        <Stat label="Users" value={stats.totalUsers} />
+        <Stat label="New this week" value={stats.newThisWeek} tone={stats.newThisWeek ? "success" : undefined} />
+        <Stat label="New today" value={stats.newToday} />
+        <Stat label="Active this week" value={stats.activeThisWeek} />
+        <Stat label="Readers" value={stats.readers} />
+        <Stat label="Books started" value={stats.booksStarted} />
+        <Stat label="Reviews" value={stats.reviews} />
+        <Stat label="Average rating" value={stats.reviews ? `${stats.averageRating} ★` : "–"} />
+        {stats.reportedReviews > 0 && <Stat label="Reported reviews" value={stats.reportedReviews} tone="warning" />}
+      </section>
+
+      <section className="panel">
+        <div className="panel-header"><h2>Sign-ups, last 14 days</h2></div>
+        <div className="signup-chart" role="img" aria-label="New accounts per day for the last 14 days">
+          {stats.signups.map((d) => (
+            <div key={d.day} className="signup-day" title={`${formatDate(d.day)}: ${d.count}`}>
+              <span className="signup-count">{d.count || ""}</span>
+              <div className="signup-bar" style={{ height: `${(d.count / peak) * 100}%` }} />
+              <span className="signup-label">{d.day.slice(8)}</span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <div className="dash-columns">
+        <BookList title="Most read" books={stats.mostRead} empty="Nobody has started a book yet."
+          detail={(b) => `${b.readers} ${b.readers === 1 ? "reader" : "readers"}`} />
+        <BookList title="Top rated" books={stats.topRated} empty="No ratings yet."
+          detail={(b) => `${b.average} ★ · ${b.ratings} ${b.ratings === 1 ? "rating" : "ratings"}`} />
+      </div>
+      <h2 className="dash-section-title">Physical library</h2>
+    </>
+  );
+}
+
+function BookList({ title, books, empty, detail }) {
+  return (
+    <section className="panel">
+      <div className="panel-header"><h2>{title}</h2></div>
+      {books.length === 0 ? (
+        <p className="muted">{empty}</p>
+      ) : (
+        <ol className="dash-books">
+          {books.map((b) => (
+            <li key={b.id}>
+              <Link to={`/book/${b.id}`}>{b.title}</Link>
+              <span className="muted small">{b.author ? `${b.author} · ` : ""}{detail(b)}</span>
+            </li>
+          ))}
+        </ol>
+      )}
+    </section>
+  );
+}
+
 function Stat({ label, value, tone }) {
   return (
     <div className={`stat${tone ? ` stat-${tone}` : ""}`}>
