@@ -98,7 +98,9 @@ public class CatalogController {
         for (ExternalNovel v : textbooks) out.putIfAbsent(v.id, v);
         for (ExternalNovel v : gutenberg.join()) out.putIfAbsent(v.id, v);
         List<ExternalNovel> borrowed = library.join();
-        for (ExternalNovel v : borrowed) out.putIfAbsent(v.id, v);
+        // Books readable inside LibraryHub first; books that only open on Open Library's site last.
+        for (ExternalNovel v : borrowed) if (v.textUrl != null) out.putIfAbsent(v.id, v);
+        for (ExternalNovel v : borrowed) if (v.textUrl == null) out.putIfAbsent(v.id, v);
         try {
             List<ExternalNovel> keep = new ArrayList<>(textbooks);
             keep.addAll(borrowed);

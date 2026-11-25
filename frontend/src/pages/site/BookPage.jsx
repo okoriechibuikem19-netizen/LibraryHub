@@ -106,6 +106,11 @@ export function BookPage() {
               {isSaved ? <><BookmarkCheck size={18} /> Saved to library</> : <><BookmarkPlus size={18} /> Save to library</>}
             </button>
           </div>
+          {!readsHere && book.readUrl && (
+            <p className="muted small">
+              This book opens on {source}'s website{source === "Open Library" ? ", where you can borrow it free with an Open Library account" : ""}.
+            </p>
+          )}
           {!user && readsHere && <p className="muted small">Reading is free. You just need an account so we can remember your page.</p>}
           <p className="small muted">
             Source:{" "}

@@ -1,13 +1,20 @@
 import { useState } from "react";
 import { Link } from "react-router";
-import { Eye } from "lucide-react";
+import { ExternalLink, Eye } from "lucide-react";
 import { compactNumber } from "../../utils/books";
 
 /** A book cover with title, author and how many people read it. Links to the book's page. */
 export function BookCard({ book, progress }) {
   return (
     <Link to={`/book/${book.id}`} className="book-card">
-      <BookCover book={book} />
+      <div className="card-cover">
+        <BookCover book={book} />
+        {!book.textUrl && book.readUrl && (
+          <span className="cover-badge" title={`This book opens on ${book.source}'s website`}>
+            <ExternalLink size={11} aria-hidden="true" /> {book.source === "OpenStax" ? "OpenStax" : "Open Library"}
+          </span>
+        )}
+      </div>
       {progress != null && (
         <div className="card-progress" aria-label={`${progress}% read`}>
           <span style={{ width: `${progress}%` }} />
